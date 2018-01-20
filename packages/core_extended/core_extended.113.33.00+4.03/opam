@@ -5,6 +5,7 @@ homepage: "https://github.com/janestreet/core_extended"
 bug-reports: "https://github.com/janestreet/core_extended/issues"
 dev-repo: "https://github.com/janestreet/core_extended.git"
 license: "Apache-2.0"
+patches: ["libccompat.patch"]
 build: [
   ["./configure" "--prefix" prefix]
   [make]

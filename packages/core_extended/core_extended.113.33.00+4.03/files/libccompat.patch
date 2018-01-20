@@ -1,0 +1,81 @@
+--- src/extended_unix_stubs.c
++++ src/extended_unix_stubs.c
+@@ -20,6 +20,9 @@
+ #endif
+
+ #include <sys/mount.h>
++#ifndef BLOCK_SIZE
++#define BLOCK_SIZE 1024 /* kernel block size */
++#endif
+
+ #ifndef __USE_ISOC99
+ # define __USE_ISOC99
+--- src/posix_clock_stubs.c
++++ src/posix_clock_stubs.c
+@@ -36,13 +36,13 @@
+ value caml_clock_getres (value clock_type) {
+   struct timespec tp;
+   clock_getres (caml_clockid_t_of_caml (clock_type), &tp);
+-  return (caml_alloc_int63 (((__int64_t)tp.tv_sec * 1000 * 1000 * 1000) + (__int64_t)tp.tv_nsec));
++  return (caml_alloc_int63 (((int64_t)tp.tv_sec * 1000 * 1000 * 1000) + (int64_t)tp.tv_nsec));
+ }
+
+ value caml_clock_gettime (value clock_type) {
+   struct timespec tp;
+   clock_gettime (caml_clockid_t_of_caml (clock_type), &tp);
+-  return (caml_alloc_int63 (((__int64_t)tp.tv_sec * 1000 * 1000 * 1000) + (__int64_t)tp.tv_nsec));
++  return (caml_alloc_int63 (((int64_t)tp.tv_sec * 1000 * 1000 * 1000) + (int64_t)tp.tv_nsec));
+ }
+
+ #endif /* JSC_POSIX_TIMERS */
+--- src/malloc_stubs.c
++++ src/malloc_stubs.c
+@@ -2,9 +2,13 @@
+
+ #ifdef JSC_LINUX_EXT
+
+-#include <malloc.h>
++#include <features.h>
+ #include "ocaml_utils.h"
+
++#ifdef __GLIBC__
++
++#include <malloc.h>
++
+ CAMLprim value malloc_mallinfo_stub(value __unused v_unit)
+ {
+   struct mallinfo info = mallinfo();
+@@ -53,4 +57,33 @@
+   return Val_unit;
+ }
+
++
++#else /* __GLIBC__ */
++
++CAMLprim value malloc_mallinfo_stub(value __unused v_unit)
++{
++  caml_failwith("mallinfo not avaliable");
++  value v_info = caml_alloc_small(10, 0);
++  return v_info;
++}
++
++CAMLprim value malloc_mallopt_stub(value v_opt, value v_n)
++{
++  caml_failwith("mallopt not avaliable");
++  return Val_unit;
++}
++
++CAMLprim value malloc_trim_stub(value v_n)
++{
++  caml_failwith("malloc_trim not avaliable");
++  return Val_unit;
++}
++
++CAMLprim value malloc_stats_stub(value __unused v_unit)
++{
++  caml_failwith("malloc_stats not avaliable");
++  return Val_unit;
++}
++
++#endif /* __GLIBC__ */
+ #endif /* JSC_LINUX_EXT */
